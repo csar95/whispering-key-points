@@ -12,7 +12,7 @@ def get_response(input: str) -> str:
     return "Use `/help` command for help"
 
 
-def get_audio_transcription(url: str, language: str) -> str:
+def get_chatGPT_response(url: str, language: str, prompt: str, model: str) -> str:
 
     # Create a YouTube object from the URL
     yt_video = YouTube(url)
@@ -25,8 +25,20 @@ def get_audio_transcription(url: str, language: str) -> str:
     filename = f"{yt_video.title}.mp3"
     audio_stream.download(output_path=output_path, filename=filename)
 
+    # Get transcript of the YouTube video's audio
     with open(f"{output_path}/{filename}", "rb") as audio_file:
         transcript = openai.Audio.transcribe("whisper-1", audio_file, language=language) if language else\
             openai.Audio.transcribe("whisper-1", audio_file)
 
-    return transcript.text
+    # Send the transcript along with the user's prompt to ChatGPT
+    res = openai.ChatCompletion.create(model=model,
+                                       messages=[{
+                                           "role": "system",
+                                           "content": "You are ChatGPT, a large language model trained by OpenAI. Answer as concisely as possible."
+                                       },
+                                       {
+                                           "role": "user",
+                                           "content": f"{prompt} {transcript.text}"
+                                       }])
+
+    return res['choices'][0]['message']['content']

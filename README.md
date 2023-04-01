@@ -4,3 +4,4 @@ Using the Whisper API to get the transcript of a video and a language model to o
 
 ## TO-DO
 - Comprobar si el video descargado de YouTube ya tiene subtitulos (no los que se generan automáticamente).
+- Añadir otros comandos que usen modelos de Hugging Face con una finalidad concreta (p. ej., summarize)

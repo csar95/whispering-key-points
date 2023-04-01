@@ -56,13 +56,13 @@ def run_discord_bot():
         else:
             await send_message(message, message_content, is_private=False)
             
-    @tree.command(name="summarize", description="My first application Command")
-    @app_commands.describe(yt_url="URL of the YouTube video that is going to be analyze", language="Language of the audio")
-    @app_commands.choices(language=[app_commands.Choice(name="English", value="en"), app_commands.Choice(name="Spanish", value="es"), app_commands.Choice(name="Multi", value="")])
-    async def summarize(interaction: Interaction, yt_url: str, language: app_commands.Choice[str]):
+    @tree.command(name="chatgpt", description="My first application Command")
+    @app_commands.describe(yt_url="URL of the YouTube video that is going to be analyze", language="Language of the audio", prompt="Tell ChatGPT what you want it to do with the transcript", model_version="ID of the model to use")
+    @app_commands.choices(language=[app_commands.Choice(name="English", value="en"), app_commands.Choice(name="Spanish", value="es"), app_commands.Choice(name="Multi", value="")],
+                          model_version=[app_commands.Choice(name="GPT-3.5", value="gpt-3.5-turbo"), app_commands.Choice(name="GPT-4", value="gpt-4")])
+    async def chatgpt(interaction: Interaction, yt_url: str, language: app_commands.Choice[str], prompt: str, model_version: app_commands.Choice[str]):
         '''
-            Add the guild ids in which the slash command will appear. If it should be in all, remove the argument,
-            but note that it will take some time (up to an hour) to register the command if it's for all guilds
+            Handles the command /chatgpt. With this command the user can pass a URL of a YouTube video and tell ChatGPT what to do with it.
         '''
         await interaction.response.defer(ephemeral=True)
 
@@ -71,13 +71,16 @@ def run_discord_bot():
         
         else:
             try:
-                response = responses_controller.get_audio_transcription(yt_url, language.value)
+                response = responses_controller.get_chatGPT_response(yt_url, language.value, prompt, model_version.value)
+
             except Exception as err:
                 response = f"An error occurred: {str(err)}"
+
             finally:
                 if len(response) < 2_000:
                     # With ephemeral=True only the user that runs the command can see it
                     await interaction.followup.send(response, ephemeral=True)
+
                 else:
                     response_words = response.split(' ')
                     for list_of_words in [response_words[i:i+250] for i in range(0, len(response_words), 250)]:
